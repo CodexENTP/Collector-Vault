@@ -233,8 +233,8 @@ document.addEventListener('dragend',()=>{DC=null;document.querySelectorAll('th.o
 document.addEventListener('dblclick',e=>{const th=colTh(e);if(!th||e.target.closest('.rs')||!AV||!AV.C)return;const f=AV.F.find(x=>x.k==th.dataset.col);if(f)fieldDlg(AV.C,f,th.getBoundingClientRect())});
 window.onhashchange=()=>{pop=null;TV={};COL=new Set();render()};
 /* Google Drive (drive.file scope: the app only sees the file it creates) */
-const DCID='569011096286-069oa7rksk4v5a22t2gv8vlmstsgg0ca.apps.googleusercontent.com',FN='collection-vault.json',API='https://www.googleapis.com/';
-function gConnect(cb){const id=localStorage.cid||DCID;if(!id)return setSt('Add your Client ID first');if(!window.google)return setSt('Google sign-in did not load. Check your connection.');
+const DCID='42585835619-lq5tajtm1rg8qvbkq71h7jvm9ohf87u6.apps.googleusercontent.com',FN='collection-vault.json',API='https://www.googleapis.com/';
+function gConnect(cb){if(location.protocol=='file:')return setSt('Drive backup needs the web address (GitHub Pages link), not a file opened from your computer.');const id=localStorage.cid||DCID;if(!id)return setSt('Add your Client ID first');if(!window.google)return setSt('Google sign-in did not load. Check your connection.');
 tc=google.accounts.oauth2.initTokenClient({client_id:id,scope:API+'auth/drive.file',callback:r=>{if(r.access_token){tok=r.access_token;setSt('Connected to Drive');cb&&cb()}else setSt('Google sign-in failed')}});tc.requestAccessToken({prompt:''})}
 async function dr(u,o={}){const r=await fetch(u,{...o,headers:{...o.headers,Authorization:'Bearer '+tok}});if(!r.ok)throw new Error(r.status);return r}
 async function findF(){return((await(await dr(API+'drive/v3/files?fields=files(id)&q='+encodeURIComponent(`name='${FN}' and trashed=false`))).json()).files[0]||{}).id}
