@@ -49,7 +49,7 @@ th.addc{padding:0;text-align:center}
 .bar button{background:transparent;border-color:transparent}.bar button:hover{background:var(--p2);border-color:transparent}.bar button.pri{background:var(--sel);color:var(--pr)}
 .ghost{font:12px system-ui,sans-serif;margin-left:6px;background:none;border-color:transparent;color:var(--mu)}.ghost:hover{background:var(--p2)}
 .danger{color:#b42318;background:none;border-color:transparent}
-dialog.fe[open]{display:grid;gap:8px;padding:16px}dialog.fe::backdrop{background:transparent}
+dialog.fe[open]{display:flex;flex-direction:column;padding:0;overflow:hidden}.fb{display:grid;gap:8px;overflow:auto;padding:16px 16px 6px;min-height:0}.ft{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 16px 14px;border-top:1px solid var(--ln)}dialog.fe::backdrop{background:transparent}
 .orow{display:flex;align-items:center;gap:6px;margin:4px 0;cursor:grab}.orow input{flex:1;padding:3px 8px}.orow b{cursor:pointer;color:var(--mu)}.orow u{display:inline-block;width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.2);opacity:1}
 :root[data-theme="dark"]{--bg:#0f181e;--p:#17242d;--p2:#203441;--pr:#2aa39a;--tx:#e8eff2;--mu:#93a6b2;--ln:#2d4350;--hl:#1f3846;--on:#06201e;--hd:#0b3b38;--hdt:#e8f5f4;--lh:#3d586a;--sel:#1d4442;color-scheme:dark}
 #theme{margin-left:6px;background:transparent;border:0;color:var(--hdt);padding:7px;border-radius:50%;display:flex;cursor:pointer}#theme:hover{background:rgba(255,255,255,.18)}
@@ -113,7 +113,7 @@ const ty=f.t=='num'||f.t=='cur'?`type="number" step="${f.k=='q'?1:f.t=='cur'?'0.
 return`${L}<input id="${id}" ${ty} ${f.t=='url'?'placeholder="https://"':''} value="${esc(v)}"></label>`}
 
 function multiDlg(r,f){const cur=new Set(r[f.k]||[]),d=document.createElement('dialog');d.innerHTML=`<h3>${esc(f.name)}</h3>${db.opts[f.k].map(o=>`<label style="display:block;margin:3px 0"><input type="checkbox" value="${esc(o)}" ${cur.has(o)?'checked':''}> ${pill(f.k,o)}</label>`).join('')}<div class="row" style="margin-top:8px"><input id="dn" placeholder="New options, comma separated"></div><div class="row" style="margin-top:12px"><button class="pri" id="dok">Save</button><button id="dcn">Cancel</button></div>`;document.body.append(d);d.showModal();
-$('#dcn').onclick=()=>d.remove();d.onclose=()=>d.remove();
+$('#dcn').onclick=()=>d.remove();d.onclick=e=>{const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.remove()};d.onclose=()=>d.remove();
 $('#dok').onclick=()=>{const v=[...d.querySelectorAll('input[type=checkbox]:checked')].map(x=>x.value),nw=$('#dn').value.split(',').map(s=>s.trim()).filter(Boolean);d.remove();commit(()=>{nw.forEach(s=>{if(!v.includes(s))v.push(s)});v.forEach(s=>addOpt(f.k,s));v.sort((a,b)=>db.opts[f.k].indexOf(a)-db.opts[f.k].indexOf(b));r[f.k]=v;r.mt=new Date().toISOString()})}}
 const TD={text:'A single line of text.',sel:'Select one predefined option from a list, or prefill each new cell with a default option.',multi:'Select one or more predefined options from a list.',num:'A number.',cur:'An amount in US dollars.',date:'A date.',url:'A web address that opens in a new tab.',mod:'Shows when each item was last changed. It updates automatically.'};
 function convert(C,F,t){const k=F.k;C.rows.forEach(r=>{let v=r[k];const s=Array.isArray(v)?v.join(', '):v==null?'':String(v);
@@ -124,11 +124,11 @@ function delField(C,f){if(!confirm(`Delete the "${f.name}" field and its data? (
 function fieldDlg(C,f,rc){if(!C)return;const isNew=!f,core=!isNew&&CORE_K.includes(f.k),sk=!isNew&&(f.t=='sel'||f.t=='multi'),
 dr={t:isNew?'text':f.t,cc:isNew||f.cc!==false&&!(db.nocc&&db.nocc[f.k]),def:isNew?'':f.def||'',o:sk?db.opts[f.k].map(n=>({o:n,n,c:(db.pal[f.k]||{})[n]||0})):[]};let DI=-1;
 const d=document.createElement('dialog'),q=s=>d.querySelector(s);d.className='fe';
-d.innerHTML=`<input id="fe_n" value="${esc(isNew?'':f.name)}" placeholder="Field name"><select id="fe_t" ${core?'disabled':''}>${TYPES.map(([k,l])=>`<option value="${k}" ${k==dr.t?'selected':''}>${l}</option>`).join('')}</select><p class="mu" id="fe_d" style="margin:0"></p><div id="fe_s"><div class="row" style="justify-content:space-between"><b>Options</b><span class="row"><label><input type="checkbox" id="fe_cc" ${dr.cc?'checked':''}> Color-code options</label><button id="fe_az">Alphabetize</button></span></div><div id="fe_o"></div><button id="fe_add" class="ghost">+ Add option</button><label id="fe_dl" style="display:grid;gap:3px;margin-top:8px">Default<select id="fe_def"></select></label>${!isNew&&['f','b','t','p'].includes(f.k)?'<p class="mu">These options are shared by every collection.</p>':''}</div><div class="row" style="margin-top:10px;justify-content:space-between"><span>${!isNew&&!core?'<button id="fe_del" class="danger">Delete field</button>':''}</span><span class="row"><button id="fe_x">Cancel</button><button class="pri" id="fe_ok">Save</button></span></div>`;
+d.innerHTML=`<div class="fb"><input id="fe_n" value="${esc(isNew?'':f.name)}" placeholder="Field name"><select id="fe_t" ${core?'disabled':''}>${TYPES.map(([k,l])=>`<option value="${k}" ${k==dr.t?'selected':''}>${l}</option>`).join('')}</select><p class="mu" id="fe_d" style="margin:0"></p><div id="fe_s"><div class="row" style="justify-content:space-between"><b>Options</b><span class="row"><label><input type="checkbox" id="fe_cc" ${dr.cc?'checked':''}> Color-code options</label><button id="fe_az">Alphabetize</button></span></div><div id="fe_o"></div><button id="fe_add" class="ghost">+ Add option</button><label id="fe_dl" style="display:grid;gap:3px;margin-top:8px">Default<select id="fe_def"></select></label>${!isNew&&['f','b','t','p'].includes(f.k)?'<p class="mu">These options are shared by every collection.</p>':''}</div></div><div class="ft"><span>${!isNew&&!core?'<button id="fe_del" class="danger">Delete field</button>':''}</span><span class="row"><button id="fe_x">Cancel</button><button class="pri" id="fe_ok">Save</button></span></div>`;
 const sh=()=>{q('#fe_s').hidden=!(dr.t=='sel'||dr.t=='multi');q('#fe_dl').hidden=dr.t!='sel';q('#fe_d').textContent=TD[dr.t]},
 U=()=>{q('#fe_def').innerHTML='<option></option>'+dr.o.map(x=>`<option ${x.n==dr.def?'selected':''}>${esc(x.n)}</option>`).join('')},
 R=()=>{q('#fe_o').innerHTML=dr.o.map((x,i)=>`<div class="orow" draggable="true" data-i="${i}"><span class="mu">⋮⋮</span><u data-c="${i}" style="background:${dr.cc?PAL[x.c%PAL.length]:'#e5e9ed'}"></u><input data-n="${i}" value="${esc(x.n)}"><b data-r="${i}">×</b></div>`).join('');U()};
-const save=()=>{const name=q('#fe_n').value.trim();if(!name)return q('#fe_n').focus();const t=dr.t;d.remove();
+const save=()=>{const name=q('#fe_n').value.trim();if(!name)return q('#fe_n').focus();const t=dr.t;off();
 commit(()=>{let F=f;if(isNew){F={k:'x'+uid(),name,t};C.fields.push(F);if(t=='mod'){const n=new Date().toISOString();C.rows.forEach(r=>{r.mt=r.mt||n})}}else{F.name=name;if(F.t!=t)convert(C,F,t)}
 if(t=='sel'||t=='multi'){const k=F.k,m=new Map();dr.o.forEach(x=>{const n=x.n.trim();if(n&&!m.has(n))m.set(n,x.c)});
 const mp=v=>{const x=dr.o.find(y=>y.o==v),n=x?x.n.trim():v;return m.has(n)?n:''};
@@ -140,13 +140,13 @@ else if(x.id=='fe_cc'){dr.cc=x.checked;R()}else if(x.id=='fe_def')dr.def=x.value
 d.addEventListener('click',e=>{const x=e.target,a=x.dataset;
 if(a.c!==undefined){const o=dr.o[+a.c];o.c=(o.c+1)%PAL.length;R()}else if(a.r!==undefined){dr.o.splice(+a.r,1);R()}
 else if(x.id=='fe_add'){dr.o.push({o:null,n:'',c:dr.o.length%PAL.length});R();const ins=d.querySelectorAll('.orow input');ins[ins.length-1].focus()}
-else if(x.id=='fe_az'){dr.o.sort((a,b)=>az(a.n,b.n));R()}else if(x.id=='fe_x')d.remove();else if(x.id=='fe_del'){d.remove();delField(C,f)}else if(x.id=='fe_ok')save()});
+else if(x.id=='fe_az'){dr.o.sort((a,b)=>az(a.n,b.n));R()}else if(x.id=='fe_x')off();else if(x.id=='fe_del'){off();delField(C,f)}else if(x.id=='fe_ok')save()});
 d.addEventListener('keydown',e=>{if(e.key=='Enter'&&e.target.id=='fe_n')save()});
 d.addEventListener('dragstart',e=>{const r=e.target.closest&&e.target.closest('.orow');if(r)DI=+r.dataset.i});
 d.addEventListener('dragover',e=>{if(e.target.closest('.orow'))e.preventDefault()});
 d.addEventListener('drop',e=>{const r=e.target.closest('.orow');if(!r||DI<0)return;e.preventDefault();const m=dr.o.splice(DI,1)[0];dr.o.splice(+r.dataset.i,0,m);DI=-1;R()});
-document.body.append(d);sh();R();d.showModal();const x=Math.max(8,Math.min(rc.left,innerWidth-390)),y=Math.min(rc.bottom+4,innerHeight-220);
-d.style.cssText=`margin:0;inset:auto;left:${x}px;top:${y}px;width:370px;max-height:80vh;overflow:auto`;d.onclose=()=>d.remove();q('#fe_n').focus();q('#fe_n').select()}
+document.body.append(d);sh();R();d.show();const x=Math.max(8,Math.min(rc.left,innerWidth-390)),y=Math.max(8,Math.min(rc.bottom+4,innerHeight-260)),outFn=e=>{if(!d.contains(e.target))off()},escFn=e=>{if(e.key=='Escape')off()},off=()=>{document.removeEventListener('mousedown',outFn,true);document.removeEventListener('keydown',escFn,true);d.remove()};
+d.style.cssText=`margin:0;inset:auto;position:fixed;left:${x}px;top:${y}px;width:370px;max-height:${innerHeight-y-12}px;z-index:50`;document.addEventListener('mousedown',outFn,true);document.addEventListener('keydown',escFn,true);q('#fe_n').focus();q('#fe_n').select()}
 /* toolbar */
 function chg(fn){AV.persist?commit(fn):(fn(),render())}
 const fsel=(s,a)=>`<select ${a} data-p="f">${AV.F.map(f=>`<option value="${f.k}" ${f.k==s?'selected':''}>${f.name}</option>`).join('')}</select>`;
